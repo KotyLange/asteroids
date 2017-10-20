@@ -1,7 +1,4 @@
-import Game from './game';
+import Game from './game.js';
+import './game.css';
 
-import './asteroids.css';
-
-
-
-const game = new Game();
+new Game();

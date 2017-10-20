@@ -1,163 +1,94 @@
-export default class Player {
+export default class Ship
+{
+  /** @constructor
+    * Handles the initialization of a ship object
+    */
+  constructor() {
+    //position of the center of the Ship
+    this.x = 500;
+    this.y = 500;
+    //Velocity to determine the magnitude/direction of the ship
+    this.velocity = {mag: 0.0, dir: 0.0};
+    this.speed = {x: 0.0, y: 0.0};
+    this.radius = 15;
+    this.color = 'white';
+  }
 
-    constructor(x, y)
-    {
-
-        this.x = x;
-        this.y = y;
-        this.angle = 0;
-        this.fire = false;
-        this.rotate = 'idle'
-        this.thrust = false;
-        this.lives = 3;
-        this.fireCoolDown = 0;
-        this.deathSound = new Audio('/destroyed.wav');
-
-
-        // bind class methods
-        this.update = this.update.bind(this);
-        this.render = this.render.bind(this);
-        this.handleKeyDown = this.keyDown.bind(this);
-        this.handleKeyUp = this.keyUp.bind(this);
-        this.offScreen = this.offScreen.bind(this);
-        window.onkeydown = this.handleKeyDown;
-        window.onkeyup = this.handleKeyUp;
-
+  /** @function updateSpeed()
+    * Handles the updating of the player's ship and enforces the speed limit
+    */
+  updateSpeed() {
+    //Alter the direction
+    this.speed.y += -Math.cos(this.velocity.dir) * this.velocity.mag;
+    this.speed.x += Math.sin(this.velocity.dir) * this.velocity.mag;
+    //Enforce the mass x speed
+    if(Math.abs(this.speed.x) >= 2.0) {
+      if(this.speed.x < 0) {
+        this.speed.x = -2.0;
+      }
+      else {
+        this.speed.x = 2.0;
+      }
     }
-
-
-
-    getPosition() {
-
-        return { x: this.x, y: this.y, angle: this.angle }
-
+    //Enfore the max y speed
+    if(Math.abs(this.speed.y) >= 2.0) {
+      if(this.speed.y < 0) {
+        this.speed.y = -2.0;
+      }
+      else {
+        this.speed.y = 2.0;
+      }
     }
+  }
 
-
-
-    levelUp()
-    {
-        this.lives++;
-        this.x = 250;
-        this.y = 250;
-        this.angle = 0;      
-
+  /** @function edgeDetection()
+    * function to handle the player's ship passing the edge of the screen, wraps back around
+    */
+  edgeDetection() {
+    if(this.x <= -this.radius) {
+      this.x = 1000;
     }
-
-
-
-
-
-
-    handleKeyDown(event)
-    {
-
-        switch (event.key)
-        {
-
-            case 'ArrowUp':
-            case 'w':
-                this.thrust = true;
-                break;
-
-            case 'ArrowLeft':
-            case 'a':
-                this.rotate = 'left';
-                break;
-
-            case 'ArrowRight':
-            case 'd':
-                this.rotate = 'right';
-                break;
-
-            case ' ':
-                this.fire = true;
-                break;
-
-            default:
-                break;
-        }
+    if(this.y <= -this.radius) {
+      this.y = 1000;
     }
-
-
-
-    handleKeyUp(event)
-    {
-        switch (event.key)
-        {
-            case ' ':
-                this.fire = false;
-                break;
-            case 'ArrowLeft':
-                this.rotate = 'idle';
-                break;
-            case 'ArrowRight':
-                this.rotate = 'idle';
-                break;
-            case 'ArrowUp':
-                this.thrust = false;
-                break;
-        }
-
+    if(this.x >= 1000 + this.radius) {
+      this.x = 0;
     }
-
-
-
-    offScreen()
-    {
-        if (this.x <= -15)
-        {
-            this.x = 499;
-        }
-        else if (this.x >= 515)
-        {
-            this.x = 1;
-        }
-
-        if (this.y <= -15)
-        {
-            this.y = 499;
-        }
-        else if (this.y >= 515)
-        {
-            this.y = 1;
-
-        }
-
+    if(this.y >= 1000 + this.radius) {
+      this.y = 0;
     }
+  }
 
+  /** @function update()
+    * handles the updating of the ships position and the particles tied to its trail
+    */
+  update() {
+    this.edgeDetection();
+    this.x += this.speed.x;
+    this.y += this.speed.y;
+  }
 
-
-    update()
-    {
-
-        
-
-    }
-
-
-
-    render(ctx)
-    {
-
-        //draw ship
-        ctx.save();
-        ctx.fillStyle = "white";
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(10, 20);
-        ctx.lineTo(-10, 20);
-        ctx.closePath();
-        ctx.fill();
-
-        //display lives
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.font = "20px Arial";
-        ctx.fillStyle = "cyan";
-        ctx.fillText("Lives: " + this.lives, 5, 495);
-        ctx.restore();
-    }
-
+  /** @function render()
+    * function to draw the ship and the particles for the thruster trail
+    * @param context ctx - the backBufferContext from game.js
+    */
+  render(ctx) {
+    ctx.save()
+    ctx.strokeStyle = this.color;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    //Enable accurate rotation
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.velocity.dir);
+    //Draw ship
+    ctx.moveTo(0, -this.radius);
+    ctx.lineTo(10, this.radius);
+    ctx.lineTo(0, this.radius / 1.5);
+    ctx.lineTo(-10, this.radius);
+    ctx.lineTo(0, -this.radius);
+    ctx.stroke();
+    ctx.fill();
+    ctx.restore();
+    //Render particles
+  }
 }
